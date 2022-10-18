@@ -4,22 +4,24 @@ using MySql.Data.MySqlClient;
 
 namespace ADO_Net_Demo.App.DB;
 
-public class Db
+public class MySqlDb : ICrud
 {
-    private MySqlConnection _db;
+    private readonly MySqlConnection _db;
+    private readonly MySqlCommand _command;
 
-    public Db()
+    public MySqlDb()
     {
-        _db = new MySqlConnection(DbConfig.ImportFromJson().ToString());
+        _db = new MySqlConnection(DbConfig.ImportFromJson()?.ToString());
+        _command = new MySqlCommand() {Connection = _db};
     }
 
-    public List<Book> GetAllBooks()
+    public IEnumerable<Book> GetAllBooks()
     {
         var books = new List<Book>();
 
         _db.Open();
 
-        const string sql = @"
+        _command.CommandText = @"
 SELECT title, last_name, first_name, genre
 FROM table_books
 JOIN table_authors
@@ -27,8 +29,7 @@ JOIN table_authors
 JOIN table_genres
     ON table_books.genre_id = table_genres.genre_id;
         ";
-        var command = new MySqlCommand(sql, _db);
-        var result = command.ExecuteReader();
+        var result = _command.ExecuteReader();
         if (result.HasRows)
         {
             while (result.Read())
